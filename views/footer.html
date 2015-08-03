@@ -1,0 +1,14 @@
+<script type="text/javascript">
+		
+		$(function(){
+			var $container = $('.container-fluid');
+			$container.imagesLoaded(function() {
+				$container.masonry({
+					columnWidth: '.item',
+					itemSelector: '.item'
+				});
+			});
+		});
+		
+	</script>
+</html>

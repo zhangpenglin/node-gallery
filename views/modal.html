@@ -1,0 +1,35 @@
+<div class="modal fade mdl" role="dialog" aria-labelledby="gridSystemModalLabel">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="gridSystemModalLabel">{{currentgallery.name}}</h4>
+			</div>
+			<div class="modal-body">
+				<div class="container-fluid">
+					<div class="row">
+						<div class="col-md-2">
+							<div class="list-group">
+								<button type="button" class="list-group-item" ng-repeat="tag in tags" ng-bind="tag._id"></button>
+								
+							</div>
+						</div>
+						<div class="col-md-8">
+
+							<div class="input-group input-group-sm" style="margin: 10px 0;">
+								<span class="input-group-addon tag" id="basic-addon1">标签:</span><span class="input-group-addon add" id="basic-addon1" ng-click="addTag()">+</span>
+								<input name="" id="" value="" ng-dblclick="deleteTag(tag)" ng-blur="update()" ng-model="tag.name" ng-repeat="tag in currentgallery.tags track by $index" class="form-control myinput" />
+
+							</div>
+
+							<img alt="300x200" ng-src="103/{{currentgallery.name }}/{{img}}" ng-repeat="img in currentgallery.imgs" class="img-responsive img-thumbnail" />
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+			</div>
+		</div>
+	</div>
+</div>

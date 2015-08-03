@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html>
+
+	<head>
+		<meta charset="utf-8" />
+		<title>Node Gallery Manager</title>
+		<link rel="stylesheet" type="text/css" href="" />
+		<link rel="stylesheet" href="/bootstrap/dist/css/bootstrap.min.css">
+		<script src="/jquery/dist/jquery.min.js"></script>
+		<script src="/bootstrap/dist/js/bootstrap.min.js"></script>
+		<script src="/javascripts/imagesLoaded.js"></script>
+		<script src="/javascripts/masonry.pkgd.js"></script>
+		<style type="text/css">
+			.thumbnail:hover {
+				border-color: #2B81AF;
+			}
+			.myinput {
+				width: 50px !important;
+				margin: 0 1px 1px 1px !important;
+				text-align: center;
+				padding: 2px 6px !important;
+				border-radius: 2px !important;
+				animation: fadein 0.2s ease-in;
+			}
+			.tag {
+				-webkit-transition: height 2s ease-in, width 2s ease-in;
+			}
+			.add {
+				padding: 0 11px;
+				cursor: pointer;
+				-webkit-transition: height 2s ease-in, width 2s ease-in;
+			}
+			.add:hover {
+				background: #2B81AF;
+				color: #fff;
+			}
+			@-webkit-keyframes fadein {
+				from {
+					border-color: #fff;
+					color: #fff
+				}
+				to {
+					border-color: #ccc;
+					color: #ccc
+				}
+			}
+		</style>
+	</head>
+
+	<body ng-app="galleryApp">
+		<div class="container-fluid">
+			<div class="row" nav>
+			</div>
+			<div class="row clearfix">
+				<div class="col-md-12 column">
+					<div class="row" id="img_container" masonry ng-controller="mainCtrl">
+
+						<div class="col-md-2 item masonry-brick" ng-repeat="gallery in gallerys" data-toggle="modal" data-target=".mdl" style="cursor: pointer; ">
+							<div class="thumbnail" ng-click="set()" ng-controller="imgCtrl">
+								<img alt="300x200" ng-src="103/{{gallery.name }}/{{gallery.imgs[0] }}" />
+								<div class="caption">
+									<h3>
+								{{gallery.name }}
+							</h3>
+
+								</div>
+							</div>
+						</div>
+						<div class="loading alert alert-info" ng-if="loading" style="width:150px;position: fixed;left: 50%;bottom:50%;margin-left:-75px;margin-bottom:-75px;text-align: center;line-height: 32px;;">加载中</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div modal currentgallery='currentgallery' tags="tags"></div>
+		<script src="/javascripts/angular.js"></script>
+		<script src="/javascripts/angular-resource.js"></script>
+		<script src="/javascripts/angular-route.js"></script>
+		<script src="/javascripts/angular-masonry.js"></script>
+		<script type="text/javascript">
+			var galleryApp = angular.module('galleryApp', ['ngResource', 'ngRoute', 'wu.masonry']);
+			galleryApp.factory('singleResource', ['$resource',
+				function($resource) {
+					return $resource('/gallery/:id', {
+						id: '@_id'
+					}, {
+						update: {
+							method: "PUT"
+						}
+					})
+				}
+			]);
+			galleryApp.factory('multiResource', ['$resource',
+				function($resource) {
+					return $resource('/gallerys/:num', {
+						num: '@num'
+					});
+				}
+			]);
+			galleryApp.factory('tagResource', ['$resource',
+				function($resource) {
+					return $resource('/tags');
+				}
+			]);
+			galleryApp.controller('mainCtrl', ['$scope', '$resource', '$rootScope', 'multiResource', 'tagResource',
+				function($scope, $resource, $rootScope, multiResource, tagResource) {
+					$scope.num = 0;
+					$scope.tags = [];
+					$scope.gallerys = [];
+					$scope.loading = false;
+					$scope.init=function () {
+						$scope.getTags();
+						$scope.getGallery();
+						scrollEvent();
+					}
+					$scope.getTags = function() {
+						$scope.tags = tagResource.query()
+					};
+					$scope.getGallery = function() {
+						$scope.loading = true;
+						var a=multiResource.query({
+							num: $scope.num
+						}, function(data) {
+							for (var i = 0; i < data.length; i++) {
+								$scope.gallerys.push(data[i]);
+							}
+							$scope.num++;
+							$scope.loading = false;
+						});console.log(a)
+					};
+					$scope.init();
+
+					function scrollEvent() {
+						window.addEventListener('scroll', debounce(function(event) {
+							if ($(document).height() - $(window).height() - $(document).scrollTop() < 50) {
+								console.log($scope)
+								$scope.getGallery()
+							}
+						}, 300));
+					}
+				}
+			]);
+			galleryApp.controller('imgCtrl', ['$scope', '$resource', '$rootScope',
+				function($scope, $resource, $rootScope) {
+					$scope.set = function() {
+						$rootScope.currentgallery = $scope.gallery;
+						$rootScope.tags = $scope.tags;
+					}
+				}
+			]);
+			galleryApp.directive('modal', function() {
+				return {
+					restrict: 'A',
+					templateUrl: 'modal.html',
+					scope: {
+						currentgallery: '=',
+						tags: '='
+					},
+					controller: function($scope, $rootScope, singleResource) {
+						$scope.addTag = function() {
+							$scope.currentgallery.tags.push({
+								name: ""
+							});
+						};
+						$scope.deleteTag = function(tag) {
+							$scope.currentgallery.tags.splice($scope.currentgallery.tags.indexOf(tag), 1)
+						}
+						$scope.update = function() {
+							singleResource.update($scope.currentgallery, function(data) {
+								console.log(data)
+							})
+						}
+					},
+					link: function($scope, $ele, $attrs, $ctrl) {
+						
+					}
+				}
+			});
+			galleryApp.directive('nav', function() {
+				return {
+					restrict: 'A',
+					templateUrl: 'nav.html'
+				}
+			})
+
+			function debounce(func, wait, immediate) {
+				var timeout;
+				return function() {
+					var context = this,
+						args = arguments;
+					var later = function() {
+						timeout = null;
+						if (!immediate) func.apply(context, args);
+					};
+					var callNow = immediate && !timeout;
+					clearTimeout(timeout);
+					timeout = setTimeout(later, wait);
+					if (callNow) func.apply(context, args);
+				};
+			}
+		</script>
+
+	</body>
+
+</html>
